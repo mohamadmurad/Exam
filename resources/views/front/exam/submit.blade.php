@@ -8,6 +8,7 @@
         </div>
         <div class="row">
 
+
             @if(!$exam->authSubmit()->first())
                 <form action="{{route('student.exam.store',['exam'=>$exam])}}"
                       method="post">
@@ -16,14 +17,14 @@
                     @endif
 
                     @csrf
-                    @foreach($exam->questions as $index=>$question)
 
-                        <div class="d-flex mb-2">
-
-                            <div class="flex-grow-1">
-                                <p>{{$index+1 }}. {{$question->question}}:</p>
-
-                                <div class="">
+                    <nav>
+                        <div class="nav nav-tabs" id="nav-tab" role="tablist">
+                            @foreach($exam->questions as $index=>$question)
+                                <button class="nav-link {{$index == 0 ? 'active':''}}" id="nav-home-tab"
+                                        data-bs-toggle="tab"
+                                        data-bs-target="#q_{{$index}}" type="button" role="tab"
+                                        aria-controls="q_{{$index}}" aria-selected="true">
 
                                     @if($exam->authSubmit->first())
                                         @if( $exam->authSubmit()->first()->correctQuestion($question->id) )
@@ -46,26 +47,42 @@
                                             </svg>
                                         @endif
                                     @endif
-                                    @foreach($question->options as $option)
-                                        <div class="form-check ">
-                                            <input required class="form-check-input" type="radio"
-                                                   name="option[{{$question->id}}]"
-                                                   {{$exam->authSubmit()->first() ? 'disabled' :''}}
-                                                   {{$exam->authSubmit()->first() &&  $exam->authSubmit()->first()->optionIDQuestion($question->id) == $option->id ? 'checked':''}}
-                                                   id="inlineRadio1{{$option->id}}" value="{{$option->id}}">
-                                            <label class="form-check-label"
-                                                   for="inlineRadio1{{$option->id}}">{{$option->option}}</label>
-                                        </div>
-                                    @endforeach
+                                    Question {{$index+1}}</button>
 
-                                </div>
-
-                            </div>
-
+                            @endforeach
                         </div>
-                    @endforeach
+                    </nav>
+                    <div class="tab-content" id="nav-tabContent">
+                        @foreach($exam->questions as $index=>$question)
+                            <div class="tab-pane fade {{$index == 0 ? 'active show':''}}" id="q_{{$index}}"
+                                 role="tabpanel" aria-labelledby="nav-home-tab">
+                                <p>{{$question->question}}:</p>
+                                @foreach($question->options as $option)
+                                    <div class="form-check ">
+                                        <input required class="form-check-input" type="radio"
+                                               name="option[{{$question->id}}]"
+                                               {{$exam->authSubmit()->first() ? 'disabled' :''}}
+                                               {{$exam->authSubmit()->first() &&  $exam->authSubmit()->first()->optionIDQuestion($question->id) == $option->id ? 'checked':''}}
+                                               id="inlineRadio1{{$option->id}}" value="{{$option->id}}">
+                                        <label class="form-check-label"
+                                               for="inlineRadio1{{$option->id}}">{{$option->option}}</label>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @endforeach
+
+                    </div>
+
                     @if(!$exam->authSubmit()->first())
                         <div class="mt-3">
+                            <button type="button" id="previous" style="display: none" class="btn btn-info"><i
+                                    class="fa fa-arrow-left me-2"></i>Previous
+                            </button>
+                            <button type="button" id="next" class="btn btn-success">Next<i
+                                    class="fa fa-arrow-right ms-2"></i>
+                            </button>
+                        </div>
+                        <div>
                             <button type="submit" class="btn btn-primary">Submit</button>
                         </div>
 
@@ -74,4 +91,51 @@
 
         </div>
     </div>
+
+    @section('scripts')
+        <script>
+            $('#next').on('click', function () {
+                let activeLink = $('.nav-tabs .nav-link.active');
+                let nextLink = activeLink.next();
+                activeLink.removeClass('active');
+                nextLink.addClass('active');
+                let currentTab = activeLink.data('bs-target');
+                let nextTab = nextLink.data('bs-target');
+                $(currentTab).removeClass('active')
+                $(currentTab).removeClass('show');
+                $(nextTab).addClass('active');
+                $(nextTab).addClass('show');
+
+                if (nextLink.next().length == 0) {
+                    $(this).hide();
+                }
+
+
+                $('#previous').show();
+
+
+            });
+
+
+            $('#previous').on('click', function () {
+                let activeLink = $('.nav-tabs .nav-link.active');
+                let previousLink = activeLink.prev();
+                activeLink.removeClass('active');
+                previousLink.addClass('active');
+                let currentTab = activeLink.data('bs-target');
+                let previousTab = previousLink.data('bs-target');
+                $(currentTab).removeClass('active')
+                $(currentTab).removeClass('show');
+                $(previousTab).addClass('active');
+                $(previousTab).addClass('show');
+
+                if (previousLink.prev().length == 0) {
+                    $(this).hide();
+                }
+                $('#next').show();
+
+            });
+
+        </script>
+    @endsection
 </x-front-layout>
